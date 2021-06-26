@@ -20,10 +20,11 @@ const createAndSendToken = (user, statusCode, response) => {
 };
 
 exports.sign = catchAsync(async (request, response) => {
-  const user = await User.findOne({ userId });
+  const { userId } = request.body
+  let user = await User.findOne({ userId });
   if (!user) {
     const {
-      name, email, userId
+      name, email
     } = request.body;
     user = await User.create({
       userId,
@@ -65,16 +66,6 @@ exports.protect = catchAsync(async (request, response, next) => {
   const user = await User.findById(verifiedToken.id);
 
   if (!user) return next(new AppError('This user does no longer exist.', StatusCodes.UNAUTHORIZED));
-
-  // 4 Check if user changed password after the token was issued
-  if (user.changedPasswordAfterToken(verifiedToken.iat)) {
-    return next(
-      new AppError(
-        'User has recently changed password! Please log in again to get access.',
-        StatusCodes.UNAUTHORIZED,
-      ),
-    );
-  }
 
   request.user = user; // tranfer data logged user to the next middleware function
 

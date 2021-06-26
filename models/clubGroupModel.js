@@ -2,6 +2,18 @@ const mongoose = require('mongoose');
 const idValidator = require('mongoose-id-validator');
 const convVie = require('../utils/convVie.js');
 
+const ClubGroupMemberSchema = new mongoose.Schema({ 
+  user: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+  },
+  role: {
+    type: String,
+    enum: ['collaborator','manager', 'member'],
+    default: 'member',
+  }
+});
+
 const clubGroupSchema = new mongoose.Schema(
   {
     name: {
@@ -17,21 +29,24 @@ const clubGroupSchema = new mongoose.Schema(
       type: String,
       required: [true, 'A ClubGroup must have content'],
     },
-    member: [{
-      user: {
-        type: mongoose.Schema.ObjectId,
-        ref: 'User',
+    photo: {
+      type: String,
+      default() {
+        return `https://via.placeholder.com/150?text=${this.name.charAt(0)}`;
       },
-      role: {
-        type: String,
-        enum: ['collaborator','manager', 'member'],
-        default: 'member',
-      }
-    }],
+    },
+    member: {
+      type: [ClubGroupMemberSchema],
+      select: false,
+    },
     category: {
       type: String,
       enum: ['Học thuật','Tình nguyện', 'Phong trào', 'Văn nghệ', 'Main', 'Default'],
       default: 'Default',
+    },
+    isMain: {
+      type: Boolean,
+      default: false,
     },
     club: {
       type: mongoose.Schema.ObjectId,
@@ -68,11 +83,11 @@ clubGroupSchema.pre('save',async function (next) {
   next();
 });
 
-clubGroupSchema.post('save', function() {
+clubGroupSchema.post('save', async function() {
   await this.model('Notification').create({
     content: `Your ClubGroup is created`,
     link: this._id,
-    user: this.member.user
+    user: this.member[0].user
   })
 });
 

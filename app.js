@@ -12,8 +12,8 @@ const hpp = require('hpp');
 // const bodyParser = require('body-parser');
 
 const userRouter = require('./routes/userRouter');
-const questionRouter = require('./routes/questionRouter');
-const answerRouter = require('./routes/answerRouter');
+const clubRouter = require('./routes/clubRouter');
+// const answerRouter = require('./routes/answerRouter');
 const notificationRouter = require('./routes/notificationRouter');
 const docsRouter = require('./routes/docsRouter');
 
@@ -106,8 +106,8 @@ if (process.env.NODE_ENV === 'development') {
 
 // 2 ROUTES
 app.use('/api/v1/user', userRouter);
-app.use('/api/v1/question', questionRouter);
-app.use('/api/v1/answer', answerRouter);
+app.use('/api/v1/club', clubRouter);
+// app.use('/api/v1/answer', answerRouter);
 app.use('/api/v1/notification', notificationRouter);
 
 app.use('/api/v1/api-docs', docsRouter);

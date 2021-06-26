@@ -7,7 +7,7 @@ const sendResponse = require('../utils/sendResponse');
 
 const updateUserFunc = (type="common") => {
   return catchAsync(async (request, response, next) => {
-    const allowedFields = ['name', 'email', 'photo', 'studentId', 'phone'];
+    const allowedFields = ['name', 'photo', 'studentId', 'phone'];
     if (type == 'admin') {
       allowedFields.push('role')
     }

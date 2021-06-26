@@ -22,41 +22,42 @@ exports.getCategoryAndCount = handler.getDistinctValueAndCount(
 exports.checkClubManagerOrAdmin = catchAsync(async (request, response, next) => {
   if (request.user.role == 'admin') return next();
 
-  // const club = await Club.findById(request.params.id);
-  // if (request.user.id !== club.user.id) {
-  //   return next(
-  //     new AppError(
-  //       'You do not have permission to perform this action',
-  //       403,
-  //     ),
-  //   );
-  // }
+  const club = await Club.findById(request.params.id).query({
+    "member.user": request.user.id,
+    "member.role": "manager",
+  })
+  if (!club) {
+    return next(
+      new AppError(
+        'You do not have permission to perform this action',
+        StatusCodes.FORBIDDEN,
+      ),
+    );
+  }
   next();
 });
 
 exports.aliasTop10Clubs = (request, response, next) => {
   request.query.limit = '10';
-  request.query.sort = '-createAt,coin';
-  request.query.fields = 'title,content,coin,category';
+  request.query.sort = '-createAt';
   next();
 };
 
-exports.setUserId = (request, response, next) => {
-  request.body.user = request.user.id;
+exports.setUserManager = (request, response, next) => {
+  request.body.member = {
+    user: request.user.id,
+    role: 'manager',
+  };
   next();
 };
 
 exports.myClubs = (request, response, next) => {
-  request.query.user = request.user.id;
+  request.query["member.user__eq"] = request.user.id;
   return next();
 }
 
-exports.restrictUpdateQuestionFields = (request, response, next) => {
-  const allowedFields = ['title', 'content', 'category'];
-
-  if (request.user.role == 'admin') {
-    allowedFields.push('status')
-  }
+exports.restrictUpdateClubFields = (request, response, next) => {
+  const allowedFields = ['name', 'description', 'photo', 'category', 'createAt'];
 
   Object.keys(request.body).forEach((element) => {
     if (!allowedFields.includes(element)) {
@@ -64,4 +65,15 @@ exports.restrictUpdateQuestionFields = (request, response, next) => {
     }
   });
   next()
+};
+
+
+exports.requestJoinClub = (request, response, next) => {
+  request.body["$addToSet"] = {
+    member: {
+      user: request.user.id,
+      role: 'requested',
+    }
+  }
+  next
 };
