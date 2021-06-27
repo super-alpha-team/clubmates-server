@@ -2,19 +2,6 @@ const mongoose = require('mongoose');
 const idValidator = require('mongoose-id-validator');
 const convVie = require('../utils/convVie.js');
 
-// const ClubMemberSchema = new mongoose.Schema({ 
-//   user: {
-//     type: mongoose.Schema.ObjectId,
-//     ref: 'User',
-//     unique: [true, 'User only has a role'],
-//   },
-//   role: {
-//     type: String,
-//     enum: ['collaborator','manager', 'member', 'requested'],
-//     default: 'member',
-//   }
-// });
-
 const clubSchema = new mongoose.Schema(
   {
     name: {
@@ -36,25 +23,28 @@ const clubSchema = new mongoose.Schema(
         return `https://via.placeholder.com/150?text=${this.name.charAt(0)}`;
       },
     },
-    member: {
-      type: [{
-        user: {
-          type: mongoose.Schema.ObjectId,
-          ref: 'User',
-          // unique: [true, 'User only has a role'],
-        },
-        role: {
-          type: String,
-          enum: ['collaborator','manager', 'member', 'requested'],
-          default: 'member',
-        }}
-      ],
-      select: false,
-    },
     category: {
       type: String,
       enum: ['Học thuật','Tình nguyện', 'Phong trào', 'Văn nghệ'],
       default: 'Phong trào',
+    },
+    memberQuantity: {
+      type: Number,
+      default: 0,
+    },
+    groupQuantity: {
+      type: Number,
+      default: 0,
+    },
+    activityQuantity: {
+      type: Number,
+      default: 0,
+    },
+    createBy: {
+      ref: 'User',
+      type: mongoose.Schema.ObjectId,
+      required: [true, 'Know who create this'],
+      select: false,
     },
     createAt: {
       type: Date,
@@ -78,6 +68,16 @@ clubSchema.virtual('clubGroups', {
   foreignField: 'club',
   localField: '_id',
 });
+clubSchema.virtual('clubMembers', {
+  ref: 'ClubMember',
+  foreignField: 'club',
+  localField: '_id',
+  options: { 
+    filters: {role: {
+      '$in': ['requested']
+    }},
+   }
+});
 
 clubSchema.plugin(idValidator);
 
@@ -90,22 +90,32 @@ clubSchema.post('save', async function() {
   await this.model('Notification').create({
     content: `Your Club is created`,
     link: this._id,
-    user: this.member[0].user
+    user: this.createBy
   })
+  await this.model('ClubMember').create({
+    club: this._id,
+    user: this.createBy,
+    role: 'manager',
+  });
   await this.model("ClubGroup").create({
     name: this.name,
     description: `${this.name} - description`,
-    member: [{
-      user: this.member[0].user,
-      role: "manager",
-    }],
     isMain: true,
-    club: this._id
+    club: this._id,
+    createBy: this.createBy
   })
 });
 
 // QUERY MIDDLEWARE - auto pupulate user in answer
 clubSchema.pre(/^find/, function (next) {
+  // this.populate({
+  //   path: 'clubGroups',
+  //   select: '_id name photo'
+  // })
+  // .populate({
+  //   path: 'clubMembers',
+  //   select: '_id user'
+  // })
   next();
 });
 

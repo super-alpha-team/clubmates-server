@@ -20,8 +20,8 @@ router
   .route('/me')
   .get(
     authCtrl.protect,
-    clubCtrl.myClubs, 
-    clubCtrl.getAllClub
+    clubCtrl.setMyClubsQuery, 
+    clubCtrl.getAllClubWithRole
   );
 
 router
@@ -29,17 +29,53 @@ router
   .get(clubCtrl.getAllClub)
   .post(
     authCtrl.protect,
-    clubCtrl.setUserManager,
+    clubCtrl.createByMe,
     clubCtrl.createClub,
   );
 
-router.post('/:id/request', 
-  authCtrl.protect,
-  clubCtrl.requestJoinClub,
-  clubCtrl.updateClub
-)
-
 router.use('/:id/group/', clubGroupRoter)
+
+router
+  .route('/:id/member')
+  .get(
+    authCtrl.protect,
+    clubCtrl.checkClubMemberOrAdmin,
+    clubCtrl.setMyClubsQuery,
+    clubCtrl.getAllClubMember
+  )
+  .post(
+    authCtrl.protect,
+    clubCtrl.checkClubManagerOrAdmin,
+    clubCtrl.setAddmemberBody,
+    clubCtrl.createClubMember
+  )
+  router
+  .route('/:clubId/member/:id')
+  .patch(
+    authCtrl.protect,
+    clubCtrl.checkClubManagerOrAdmin,
+    clubCtrl.restrictUpdateMemberFields,
+    clubCtrl.updateMember,
+  )
+  .delete(
+    authCtrl.protect,
+    clubCtrl.checkClubManagerOrAdmin,
+    clubCtrl.deleteMember,
+  )
+router
+  .route('/:id/request')
+  .get(
+    authCtrl.protect,
+    clubCtrl.checkClubManagerOrAdmin,
+    clubCtrl.setRequestMemberQuery,
+    clubCtrl.getAllClubMember
+  )
+  .post(
+    authCtrl.protect,
+    clubCtrl.setAddmemberBody,
+    clubCtrl.setRequestMemberBody,
+    clubCtrl.createClubMember
+  )
 
 router
   .route('/:id')
