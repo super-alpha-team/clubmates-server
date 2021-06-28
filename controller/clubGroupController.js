@@ -49,6 +49,11 @@ exports.setUserManager = (request, response, next) => {
   next();
 };
 
+exports.setClub = (req, res, next) => {
+  req.body.club = req.params.id
+  next()
+}
+
 exports.myClubGroups = (request, response, next) => {
   request.query.user = request.user.id;
   return next();

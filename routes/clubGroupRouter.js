@@ -1,8 +1,9 @@
 const express = require('express');
 const clubGroupCtrl = require('../controller/clubGroupController');
 const authCtrl = require('../controller/authController');
+const activityRoter = require('./activityRouter');
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 // Advanced Route
 
@@ -21,10 +22,11 @@ router.route('/category').get(clubGroupCtrl.getCategoryAndCount);
 
 router
   .route('/')
-  .get(clubGroupCtrl.getClubGroup)
+  .get(clubGroupCtrl.getAllClubGroup)
   .post(
     authCtrl.protect,
     clubGroupCtrl.setUserManager,
+    clubGroupCtrl.setClub,
     clubGroupCtrl.createClubGroup,
   );
 

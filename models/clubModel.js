@@ -2,18 +2,18 @@ const mongoose = require('mongoose');
 const idValidator = require('mongoose-id-validator');
 const convVie = require('../utils/convVie.js');
 
-const ClubMemberSchema = new mongoose.Schema({ 
-  user: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
-    unique: [true, 'User only has a role'],
-  },
-  role: {
-    type: String,
-    enum: ['collaborator','manager', 'member', 'requested'],
-    default: 'member',
-  }
-});
+// const ClubMemberSchema = new mongoose.Schema({ 
+//   user: {
+//     type: mongoose.Schema.ObjectId,
+//     ref: 'User',
+//     unique: [true, 'User only has a role'],
+//   },
+//   role: {
+//     type: String,
+//     enum: ['collaborator','manager', 'member', 'requested'],
+//     default: 'member',
+//   }
+// });
 
 const clubSchema = new mongoose.Schema(
   {
@@ -37,7 +37,18 @@ const clubSchema = new mongoose.Schema(
       },
     },
     member: {
-      type: [ClubMemberSchema],
+      type: [{
+        user: {
+          type: mongoose.Schema.ObjectId,
+          ref: 'User',
+          // unique: [true, 'User only has a role'],
+        },
+        role: {
+          type: String,
+          enum: ['collaborator','manager', 'member', 'requested'],
+          default: 'member',
+        }}
+      ],
       select: false,
     },
     category: {
