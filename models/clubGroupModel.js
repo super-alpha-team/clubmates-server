@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const idValidator = require('mongoose-id-validator');
 const convVie = require('../utils/convVie.js');
 
+//check member can add to clubgroup or not?
 const clubGroupSchema = new mongoose.Schema(
   {
     name: {
@@ -27,6 +28,10 @@ const clubGroupSchema = new mongoose.Schema(
       type: String,
       enum: ['Học thuật','Tình nguyện', 'Phong trào', 'Văn nghệ', 'Main', 'Default'],
       default: 'Default',
+    },
+    memberQuantity: {
+      type: Number,
+      default: 0,
     },
     isMain: {
       type: Boolean,
@@ -80,6 +85,11 @@ clubGroupSchema.post('save', async function() {
     user: this.createBy
   })
   // add to member clubgroup
+   await this.model('ClubGroupMember').create({
+     clubGroup: this._id,
+     user: this.createBy,
+     role: 'manager'
+   })
 });
 
 // QUERY MIDDLEWARE - auto pupulate user in answer

@@ -59,8 +59,8 @@ exports.checkClubManagerOrAdmin = catchAsync(async (request, response, next) => 
 });
 
 exports.aliasTop10Clubs = (request, response, next) => {
-  request.query.limit = '10';
-  request.query.sort = '-createAt';
+  request.query.__limit = '10';
+  request.query.__sort = '-createAt';
   next();
 };
 

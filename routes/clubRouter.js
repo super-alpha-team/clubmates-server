@@ -33,7 +33,7 @@ router
     clubCtrl.createClub,
   );
 
-router.use('/:id/group/', clubGroupRoter)
+router.use('/:clubId/group/', clubGroupRoter)
 
 router
   .route('/:id/member')
