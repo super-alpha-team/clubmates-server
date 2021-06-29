@@ -24,12 +24,13 @@ exports.sign = catchAsync(async (request, response) => {
   let user = await User.findOne({ userId });
   if (!user) {
     const {
-      name, email
+      name, email, photo
     } = request.body;
     user = await User.create({
       userId,
       name,
       email,
+      photo
     });
   }
 
