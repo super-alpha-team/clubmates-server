@@ -1,46 +1,77 @@
 const express = require('express');
 const activityGroupCtrl = require('../controller/activityGroupController');
 const authCtrl = require('../controller/authController');
+const activityRouter = require('./activityRouter');
+const activityCtrl = require('../controller/activityController')
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true }); //get activity id
 
-// Advanced Route
 
 router.route('/category').get(activityGroupCtrl.getCategoryAndCount);
 
-// Normal CRUD route
-
-// router
-//   .route('/me')
-//   .get(
-//     authCtrl.protect,
-//     activityGroupCtrl.myQuestion, 
-//     activityGroupCtrl.getAllQuestion
-//   );
-
+router
+  .route('/me')
+  .get(
+    authCtrl.protect,
+    activityGroupCtrl.setMyActivityGroupQuery, 
+    activityGroupCtrl.getAllActivityGroupWithRole
+  );
 
 router
   .route('/')
-  .get(activityGroupCtrl.getActivityGroup)
-  .post(
+  .get(activityGroupCtrl.getAllActivityGroup)
+  .post( 
     authCtrl.protect,
+    activityGroupCtrl.checkActivityManagerOrAdmin,
     activityGroupCtrl.setUserManager,
+    activityGroupCtrl.setActivity, 
+    activityGroupCtrl.createByMe,   
     activityGroupCtrl.createActivityGroup,
   );
 
-// router
-//   .route('/:id')
-//   .get(questionCtrl.getQuestion)
-//   .patch(
-//     authCtrl.protect,
-//     questionCtrl.checkQuestionOwnerOrAdmin,
-//     questionCtrl.restrictUpdateQuestionFields,
-//     questionCtrl.updateQuestion,
-//   )
-//   .delete(
-//     authCtrl.protect,
-//     questionCtrl.checkQuestionOwnerOrAdmin,
-//     questionCtrl.deleteQuestion,
-//   );
+router
+.route('/:id')
+.get( activityGroupCtrl.getActivityGroup) 
+.patch(  
+  authCtrl.protect,
+  activityGroupCtrl.checkActivityGroupManagerOrAdmin,
+  activityGroupCtrl.restrictUpdateActivityGroupFields,
+  activityGroupCtrl.updateActivityGroup,
+)
+.delete( 
+  authCtrl.protect,
+  activityGroupCtrl.checkActivityGroupManagerOrAdmin,
+  activityGroupCtrl.deleteActivityGroup,
+);
+
+router
+.route('/:id/member')
+.get(
+  authCtrl.protect,
+  activityGroupCtrl.checkActivityGroupMemberOrAdmin,
+  activityGroupCtrl.setMyActivityGroupQuery,
+  activityGroupCtrl.getAllActivityGroupMember
+)
+.post(
+  authCtrl.protect,
+  activityGroupCtrl.checkActivityGroupManagerOrAdmin,
+  activityGroupCtrl.setAddmemberBody,
+  activityGroupCtrl.createActivityGroupMember
+)
+
+router
+  .route('/:activityGroupId/member/:id')
+  .patch(
+    authCtrl.protect,
+    activityGroupCtrl.checkActivityGroupMemberManagerOrAdmin,
+    // activityCtrl.restrictUpdateMemberFields, ????
+    activityGroupCtrl.updateActivityGroupMember,
+  )
+  .delete(
+    authCtrl.protect,
+    activityGroupCtrl.checkActivityGroupMemberManagerOrAdmin,
+    activityGroupCtrl.deleteActivityGroupMember,
+  )
+
 
 module.exports = router;

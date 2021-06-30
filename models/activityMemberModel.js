@@ -2,11 +2,11 @@ const mongoose = require('mongoose');
 const idValidator = require('mongoose-id-validator');
 const uniqueValidator = require('mongoose-unique-validator'); // plugin for unique field
 
-const clubMemberSchema = new mongoose.Schema({ 
-    club: {
+const activityMemberSchema = new mongoose.Schema({ 
+    activity: {
       type: mongoose.Schema.ObjectId,
-      ref: 'Club',
-      require: [true, 'Member must into one Club']
+      ref: 'Activity',
+      require: [true, 'Member must into one Activity']
     },
     user: {
       type: mongoose.Schema.ObjectId,
@@ -33,44 +33,44 @@ const clubMemberSchema = new mongoose.Schema({
   },
 );
   
-clubMemberSchema.index({ club: 1, user: 1 }, { unique: true });
+activityMemberSchema.index({ activity: 1, user: 1 }, { unique: true });
 
-clubMemberSchema.plugin(idValidator);
+activityMemberSchema.plugin(idValidator);
 
-clubMemberSchema.plugin(uniqueValidator, {
+activityMemberSchema.plugin(uniqueValidator, {
     message: 'Error, {VALUE} is already taken',
   });
 
-clubMemberSchema.statics.countClubs = async function (clubId) {
+activityMemberSchema.statics.countActivities = async function (activityId) {
     const stats = await this.aggregate([
       {
         $match: { 
-            club: clubId,
+            activity: activityId,
         },
       },
       {
         $group: {
-          _id: '$club',
+          _id: '$activity',
           count: { $sum: 1 },
         },
       },
     ]);
 
     if (stats.length > 0) { 
-      await this.model('Club').findByIdAndUpdate(clubId, {
+      await this.model('Activity').findByIdAndUpdate(activityId, {
         memberQuantity: stats[0].count,
       });
     } else {
-      await this.model('Club').findByIdAndUpdate(clubId, {
+      await this.model('Activity').findByIdAndUpdate(activityId, {
         memberQuantity: 0,
       });
     }
   };
 
-clubMemberSchema.post('save', async function () {
-await this.constructor.countClubs(this.club);
+activityMemberSchema.post('save', async function () {
+await this.constructor.countActivities(this.activity);
 // `this` points to current member
-// `this.consctructor = this.model('ClubMember')
+// `this.consctructor = this.model('ActivityMember')
 
 // send notification for user
 
@@ -78,30 +78,30 @@ await this.constructor.countClubs(this.club);
 });
 
 // findByIdAndUpdate & findByIdAndDelete all using findOneAnd
-clubMemberSchema.pre(/^findOneAnd/, async function (next) {
+activityMemberSchema.pre(/^findOneAnd/, async function (next) {
     this.getUpdatedMember = await this.findOne();
     next();
   });
 
-clubMemberSchema.post(
+activityMemberSchema.post(
     /findOneAndUpdate|updateOne|update/ ,
     async function() {
-        await this.getUpdatedMember.constructor.countClubs(
-            this.getUpdatedMember.club
+        await this.getUpdatedMember.constructor.countActivities(
+            this.getUpdatedMember.activity
         );
   });
 
-clubMemberSchema.post(
+activityMemberSchema.post(
     /findOneAndDelete|findOneAndRemove|deleteOne|remove/,
   { document: true },
   async function () {
-    await this.getUpdatedMember.constructor.countClubs(this.club);
-    // await this.model('ClubGroup').deleteMany({ club: this._id });
+    await this.getUpdatedMember.constructor.countActivities(this.activity);
+    // await this.model('ActivityGroup').deleteMany({ activity: this._id });
   },
 )
 
 
 
 
-const ClubMember = mongoose.model('ClubMember', clubMemberSchema);
-module.exports = ClubMember;
+const ActivityMember = mongoose.model('ActivityMember', activityMemberSchema);
+module.exports = ActivityMember;

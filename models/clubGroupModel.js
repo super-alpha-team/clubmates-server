@@ -64,10 +64,9 @@ const clubGroupSchema = new mongoose.Schema(
 // we need to create indexes for the fields we need to search.
 clubGroupSchema.index({textSearch: 'text'});
 
-// Virtual populate for show up child referencing
-// clubGroupSchema.virtual('clubGroupGroups', {
-//   ref: 'ClubGroupGroup',
-//   foreignField: 'clubGroup',
+// clubGroupSchema.virtual('activity', {
+//   ref: 'Activity',
+//   foreignField: 'activity',
 //   localField: '_id',
 // });
 

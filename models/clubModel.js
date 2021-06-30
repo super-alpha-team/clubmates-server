@@ -68,6 +68,7 @@ clubSchema.virtual('clubGroups', {
   foreignField: 'club',
   localField: '_id',
 });
+
 clubSchema.virtual('clubMembers', {
   ref: 'ClubMember',
   foreignField: 'club',

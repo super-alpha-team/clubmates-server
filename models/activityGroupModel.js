@@ -2,18 +2,7 @@ const mongoose = require('mongoose');
 const idValidator = require('mongoose-id-validator');
 const convVie = require('../utils/convVie.js');
 
-const ActivityGroupMemberSchema = new mongoose.Schema({ 
-  user: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
-  },
-  role: {
-    type: String,
-    enum: ['manager', 'member', 'collaborator', 'participant'],
-    default: 'member',
-  }
-});
-
+//check member can add to activitygroup or not?
 const activityGroupSchema = new mongoose.Schema(
   {
     name: {
@@ -35,14 +24,14 @@ const activityGroupSchema = new mongoose.Schema(
         return `https://via.placeholder.com/150?text=${this.name.charAt(0)}`;
       },
     },
-    member: {
-      type: [ActivityGroupMemberSchema],
-      select: false,
-    },
     category: {
       type: String,
-      enum: ['Học thuật','Tình nguyện', 'Phong trào', 'Văn nghệ', 'Default'],
+      enum: ['Học thuật','Tình nguyện', 'Phong trào', 'Văn nghệ', 'Main', 'Default'],
       default: 'Default',
+    },
+    memberQuantity: {
+      type: Number,
+      default: 0,
     },
     isMain: {
       type: Boolean,
@@ -53,23 +42,32 @@ const activityGroupSchema = new mongoose.Schema(
       ref: 'Activity',
       required: [true, 'ActivityGroup must belong to an Activity'],
     },
+    createBy: {
+      ref: 'User',
+      type: mongoose.Schema.ObjectId,
+      required: [true, 'Know who create this'],
+      select: false,
+    },
     createAt: {
       type: Date,
-      default: Date.now(),
+      default: Date.now(), // Mongoose will auto convert to today's date
     },
   },
   {
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
+    toJSON: { virtuals: true }, // pass the virtuals properties to JSON
+    toObject: { virtuals: true }, // --                        -- Object
   },
 );
 
+
+// mongo’s full-text search,
+// we need to create indexes for the fields we need to search.
 activityGroupSchema.index({textSearch: 'text'});
 
 // Virtual populate for show up child referencing
-// activityGroupSchema.virtual('ActivityGroupGroups', {
+// activityGroupSchema.virtual('activityGroupGroups', {
 //   ref: 'ActivityGroupGroup',
-//   foreignField: 'ActivityGroup',
+//   foreignField: 'activityGroup',
 //   localField: '_id',
 // });
 
@@ -84,8 +82,14 @@ activityGroupSchema.post('save', async function() {
   await this.model('Notification').create({
     content: `Your ActivityGroup is created`,
     link: this._id,
-    user: this.member[0].user
+    user: this.createBy
   })
+  // add to member activitygroup
+   await this.model('ActivityGroupMember').create({
+     activityGroup: this._id,
+     user: this.createBy,
+     role: 'manager'
+   })
 });
 
 // QUERY MIDDLEWARE - auto pupulate user in answer
@@ -101,6 +105,7 @@ activityGroupSchema.pre(/^find/, function (next) {
   next();
 });
 
+// all middleware are trigger
 activityGroupSchema.pre(
   /findOneAndUpdate|updateOne|update/ ,
   function(next) {
@@ -114,7 +119,7 @@ activityGroupSchema.post(
   /findOneAndDelete|findOneAndRemove|deleteOne|remove/,
   { document: true },
   async function () {
-    // await this.model('ActivityGroupGroup').deleteMany({ ActivityGroup: this._id });
+    // await this.model('ActivityGroupGroup').deleteMany({ activityGroup: this._id });
   },
 );
 

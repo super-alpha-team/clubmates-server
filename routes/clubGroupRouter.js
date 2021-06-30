@@ -1,7 +1,6 @@
 const express = require('express');
 const clubGroupCtrl = require('../controller/clubGroupController');
 const authCtrl = require('../controller/authController');
-const activityRoter = require('./activityRouter');
 const clubCtrl = require('../controller/clubController')
 
 const router = express.Router({ mergeParams: true }); //get club id
