@@ -1,19 +1,7 @@
 const mongoose = require('mongoose');
 const idValidator = require('mongoose-id-validator');
 const convVie = require('../utils/convVie.js');
-
-const ActivityMemberSchema = new mongoose.Schema({ 
-  user: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
-    unique: [true, "user has only one role"],
-  },
-  role: {
-    type: String,
-    enum: ['collaborator','manager', 'member', 'requested'],
-    default: 'member',
-  }
-});
+const ActivityMember = require('./activityMemberModel.js');
 
 const activitySchema = new mongoose.Schema(
   {
@@ -41,14 +29,24 @@ const activitySchema = new mongoose.Schema(
       enum: ['Học thuật', 'Văn nghệ','Tình nguyện', 'Phong trào'],
       default: 'Học thuật',
     },
-    member: {
-      type: [ActivityMemberSchema],
-      select: false,
+    memberQuantity: {
+      type: Number,
+      default: 0,
+    },
+    groupQuantity: {
+      type: Number,
+      default: 0,
     },
     clubGroup: {
       type: mongoose.Schema.ObjectId,
       ref: 'ClubGroup',
       required: [true, "The Activity must belong to a ClubGroup"],
+    },
+    createBy: {
+      ref: 'User',
+      type: mongoose.Schema.ObjectId,
+      required: [true, 'Know who create this'],
+      select: false,
     },
     createAt: {
       type: Date,
@@ -69,6 +67,17 @@ activitySchema.virtual('activityGroups', {
   localField: '_id',
 });
 
+activitySchema.virtual('activityMembers', {
+  ref: 'ActivityMember',
+  foreignField: 'activity',
+  localField: '_id',
+  options: { 
+    filters: {role: {
+      '$in': ['requested']
+    }},
+   }
+});
+
 activitySchema.plugin(idValidator);
 
 activitySchema.pre('save',async function (next) {
@@ -78,19 +87,21 @@ activitySchema.pre('save',async function (next) {
 
 activitySchema.post('save', async function() {
   await this.model('Notification').create({
-    content: `Your club group's activity is created`,
+    content: `Your Activity is created`,
     link: this._id,
-    user: this.member[0].user
+    user: this.createBy
   })
+  await this.model('ActivityMember').create({
+    activity: this._id,
+    user: this.createBy,
+    role: 'manager',
+  });
   await this.model("ActivityGroup").create({
-    name: `${this.name} - group`,
+    name: this.name,
     description: `${this.name} - description`,
-    member: [{
-      user: this.member[0].user,
-      role: "manager",
-    }],
     isMain: true,
-    activity: this._id
+    activity: this._id,
+    createBy: this.createBy
   })
 });
 

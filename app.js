@@ -109,7 +109,6 @@ if (process.env.NODE_ENV === 'development') {
 app.use('/api/v1/user', userRouter);
 app.use('/api/v1/club', clubRouter);
 app.use('/api/v1/activity', activityRouter);
-// app.use('/api/v1/answer', answerRouter);
 app.use('/api/v1/notification', notificationRouter);
 
 app.use('/api/v1/api-docs', docsRouter);
