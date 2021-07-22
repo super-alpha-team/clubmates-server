@@ -1,4 +1,4 @@
-/* eslint-disable unicorn/filename-case */
+/* eslint-disable prefer-destructuring */
 const { StatusCodes } = require('http-status-codes');
 const catchAsync = require('./catchAsync');
 const AppError = require('./appError');
@@ -14,17 +14,19 @@ exports.createOne = (Model) => catchAsync(async (request, response, next) => {
 
 exports.getAll = (Model, Option = {}) => catchAsync(async (request, response, next) => {
   const {
-    skip, limit, sort, filter, 
+    skip, limit, sort, filter,
   } = queryToMongo(request.query);
   let select = {};
   if (Option.select) {
-    select = Option.select
+    select = Option.select;
   }
   console.log(queryToMongo(request.query));
   const [total, result] = await Promise.all([
     Model.countDocuments(filter),
     Model.find(filter).sort(sort).skip(skip)
-      .limit(limit).populate(Option.populate).select(select)
+      .limit(limit)
+      .populate(Option.populate)
+      .select(select),
   ]);
 
   sendResponse({ total, returned: result.length, result }, StatusCodes.OK, response);
@@ -45,7 +47,7 @@ exports.getOne = (Model, Option = {}) => catchAsync(async (request, response, ne
   if (Option.populate) query = query.populate(Option.populate);
   let select = {};
   if (Option.select) {
-    select = Option.select
+    select = Option.select;
   }
   query = query.select(select);
 
@@ -53,7 +55,7 @@ exports.getOne = (Model, Option = {}) => catchAsync(async (request, response, ne
 
   if (!document) return next(new AppError('No document found', StatusCodes.NOT_FOUND));
 
-  sendResponse(document, StatusCodes.OK, response);
+  return sendResponse(document, StatusCodes.OK, response);
 });
 
 exports.updateOne = (Model) => catchAsync(async (request, response, next) => {
@@ -70,7 +72,7 @@ exports.updateOne = (Model) => catchAsync(async (request, response, next) => {
 
   if (!document) return next(new AppError('No document found', StatusCodes.NOT_FOUND));
 
-  sendResponse(document, StatusCodes.OK, response);
+  return sendResponse(document, StatusCodes.OK, response);
 });
 
 exports.deleteOne = (Model) => catchAsync(async (request, response, next) => {
@@ -80,7 +82,7 @@ exports.deleteOne = (Model) => catchAsync(async (request, response, next) => {
 
   // in RESTful API, common practice is not send anything back to client when deleted
 
-  sendResponse(undefined, StatusCodes.NO_CONTENT, response);
+  return sendResponse(undefined, StatusCodes.NO_CONTENT, response);
 });
 
 exports.getDistinctValueAndCount = (Model, value) => catchAsync(async (request, response, next) => {
@@ -106,5 +108,5 @@ exports.getDistinctValueAndCount = (Model, value) => catchAsync(async (request, 
     },
   ]);
 
-  sendResponse(document, StatusCodes.OK, response);
+  return sendResponse(document, StatusCodes.OK, response);
 });

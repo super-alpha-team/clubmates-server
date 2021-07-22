@@ -3,7 +3,7 @@ const path = require('path');
 
 const morgan = require('morgan');
 const cors = require('cors');
-const qs = require('qs');
+// const qs = require('qs');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
@@ -19,7 +19,7 @@ const notificationRouter = require('./routes/notificationRouter');
 const docsRouter = require('./routes/docsRouter');
 
 const AppError = require('./utils/appError');
-const globalErrorHandler = require('./utils/errorHandler.js');
+const globalErrorHandler = require('./utils/errorHandler');
 
 const app = express();
 

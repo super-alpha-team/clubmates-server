@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const idValidator = require('mongoose-id-validator');
-const convVie = require('../utils/convVie.js');
+const convVie = require('../utils/convVie');
 
 const clubSchema = new mongoose.Schema(
   {
@@ -25,7 +25,7 @@ const clubSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['Học thuật','Tình nguyện', 'Phong trào', 'Văn nghệ'],
+      enum: ['Học thuật', 'Tình nguyện', 'Phong trào', 'Văn nghệ'],
       default: 'Phong trào',
     },
     memberQuantity: {
@@ -57,10 +57,9 @@ const clubSchema = new mongoose.Schema(
   },
 );
 
-
 // mongo’s full-text search,
 // we need to create indexes for the fields we need to search.
-clubSchema.index({textSearch: 'text'});
+clubSchema.index({ textSearch: 'text' });
 
 // Virtual populate for show up child referencing
 clubSchema.virtual('clubGroups', {
@@ -73,42 +72,44 @@ clubSchema.virtual('clubMembers', {
   ref: 'ClubMember',
   foreignField: 'club',
   localField: '_id',
-  options: { 
-    filters: {role: {
-      '$in': ['requested']
-    }},
-   }
+  options: {
+    filters: {
+      role: {
+        $in: ['requested'],
+      },
+    },
+  },
 });
 
 clubSchema.plugin(idValidator);
 
-clubSchema.pre('save',async function (next) {
+clubSchema.pre('save', async function (next) {
   this.textSearch = convVie(this.name).toLowerCase();
   next();
 });
 
-clubSchema.post('save', async function() {
+clubSchema.post('save', async function () {
   await this.model('Notification').create({
-    content: `Your Club is created`,
+    content: 'Your Club is created',
     link: this._id,
-    user: this.createBy
-  })
+    user: this.createBy,
+  });
   await this.model('ClubMember').create({
     club: this._id,
     user: this.createBy,
     role: 'manager',
   });
-  await this.model("ClubGroup").create({
+  await this.model('ClubGroup').create({
     name: this.name,
     description: `${this.name} - description`,
     isMain: true,
     club: this._id,
-    createBy: this.createBy
-  })
+    createBy: this.createBy,
+  });
 });
 
 // QUERY MIDDLEWARE - auto pupulate user in answer
-clubSchema.pre(/^find/, function (next) {
+clubSchema.pre(/^find/, (next) => {
   // this.populate({
   //   path: 'clubGroups',
   //   select: '_id name photo'
@@ -122,13 +123,14 @@ clubSchema.pre(/^find/, function (next) {
 
 // all middleware are trigger
 clubSchema.pre(
-  /findOneAndUpdate|updateOne|update/ ,
-  function(next) {
+  /findOneAndUpdate|updateOne|update/,
+  function (next) {
     const docUpdate = this.getUpdate();
     if (!docUpdate || !docUpdate.name) return next();
     this.findOneAndUpdate({}, { textSearch: convVie(docUpdate.name).toLowerCase() });
     return next();
-});
+  },
+);
 
 clubSchema.post(
   /findOneAndDelete|findOneAndRemove|deleteOne|remove/,

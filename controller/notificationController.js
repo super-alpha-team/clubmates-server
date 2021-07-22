@@ -12,7 +12,7 @@ exports.deleteNotification = handler.deleteOne(Notification);
 exports.updateNotification = handler.updateOne(Notification);
 
 exports.checkNotificationOwnerOrAdmin = catchAsync(async (request, response, next) => {
-  if (request.user.role == 'admin') return next();
+  if (request.user.role === 'admin') return next();
   const notification = await Notification.findById(request.params.id);
 
   if (request.user.id !== notification.user.id) {
@@ -23,21 +23,21 @@ exports.checkNotificationOwnerOrAdmin = catchAsync(async (request, response, nex
       ),
     );
   }
-  next();
+  return next();
 });
 
 exports.myNotification = (request, response, next) => {
   request.query.user = request.user.id;
   next();
-}
+};
 
 exports.restrictUpdateNotificationFields = (request, response, next) => {
   const allowedFields = ['read'];
 
   Object.keys(request.body).forEach((element) => {
     if (!allowedFields.includes(element)) {
-      delete request.body[element]
+      delete request.body[element];
     }
   });
-  next()
+  next();
 };

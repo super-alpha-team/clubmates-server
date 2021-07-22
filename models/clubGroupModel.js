@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 const idValidator = require('mongoose-id-validator');
-const convVie = require('../utils/convVie.js');
+const convVie = require('../utils/convVie');
 
-//check member can add to clubgroup or not?
+// check member can add to clubgroup or not?
 const clubGroupSchema = new mongoose.Schema(
   {
     name: {
@@ -26,7 +26,7 @@ const clubGroupSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['Học thuật','Tình nguyện', 'Phong trào', 'Văn nghệ', 'Main', 'Default'],
+      enum: ['Học thuật', 'Tình nguyện', 'Phong trào', 'Văn nghệ', 'Main', 'Default'],
       default: 'Default',
     },
     memberQuantity: {
@@ -59,10 +59,9 @@ const clubGroupSchema = new mongoose.Schema(
   },
 );
 
-
 // mongo’s full-text search,
 // we need to create indexes for the fields we need to search.
-clubGroupSchema.index({textSearch: 'text'});
+clubGroupSchema.index({ textSearch: 'text' });
 
 // clubGroupSchema.virtual('activity', {
 //   ref: 'Activity',
@@ -72,27 +71,27 @@ clubGroupSchema.index({textSearch: 'text'});
 
 clubGroupSchema.plugin(idValidator);
 
-clubGroupSchema.pre('save',async function (next) {
+clubGroupSchema.pre('save', async function (next) {
   this.textSearch = convVie(this.name).toLowerCase();
   next();
 });
 
-clubGroupSchema.post('save', async function() {
+clubGroupSchema.post('save', async function () {
   await this.model('Notification').create({
-    content: `Your ClubGroup is created`,
+    content: 'Your ClubGroup is created',
     link: this._id,
-    user: this.createBy
-  })
+    user: this.createBy,
+  });
   // add to member clubgroup
-   await this.model('ClubGroupMember').create({
-     clubGroup: this._id,
-     user: this.createBy,
-     role: 'manager'
-   })
+  await this.model('ClubGroupMember').create({
+    clubGroup: this._id,
+    user: this.createBy,
+    role: 'manager',
+  });
 });
 
 // QUERY MIDDLEWARE - auto pupulate user in answer
-clubGroupSchema.pre(/^find/, function (next) {
+clubGroupSchema.pre(/^find/, (next) => {
   // this.populate({
   //   path: 'member',
   //   select: '_id name photo', // just show name + photo and hide everything else for security
@@ -106,18 +105,19 @@ clubGroupSchema.pre(/^find/, function (next) {
 
 // all middleware are trigger
 clubGroupSchema.pre(
-  /findOneAndUpdate|updateOne|update/ ,
-  function(next) {
+  /findOneAndUpdate|updateOne|update/,
+  function (next) {
     const docUpdate = this.getUpdate();
     if (!docUpdate || !docUpdate.name) return next();
     this.findOneAndUpdate({}, { textSearch: convVie(docUpdate.name).toLowerCase() });
     return next();
-});
+  },
+);
 
 clubGroupSchema.post(
   /findOneAndDelete|findOneAndRemove|deleteOne|remove/,
   { document: true },
-  async function () {
+  async () => {
     // await this.model('ClubGroupGroup').deleteMany({ clubGroup: this._id });
   },
 );

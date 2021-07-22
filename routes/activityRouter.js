@@ -15,8 +15,8 @@ router
   .route('/me')
   .get(
     authCtrl.protect,
-    activityCtrl.setMyActivitiesQuery, 
-    activityCtrl.getAllActivityWithRole
+    activityCtrl.setMyActivitiesQuery,
+    activityCtrl.getAllActivityWithRole,
   );
 
 router
@@ -28,7 +28,7 @@ router
     activityCtrl.createActivity,
   );
 
-router.use('/:activityId/group/', activityGroupRouter)
+router.use('/:activityId/group/', activityGroupRouter);
 
 router
   .route('/:id')
@@ -44,38 +44,38 @@ router
     activityCtrl.checkActivityManagerOrAdmin,
     activityCtrl.deleteActivity,
   );
-  
-  router
+
+router
   .route('/:id/request')
   .get(
     authCtrl.protect,
     activityCtrl.checkActivityManagerOrAdmin,
     activityCtrl.setRequestMemberQuery,
-    activityCtrl.getAllActivityMember
+    activityCtrl.getAllActivityMember,
   )
   .post(
     authCtrl.protect,
     activityCtrl.setAddMemberBody,
     activityCtrl.setRequestMemberBody,
-    activityCtrl.createActivityMember
-  )
+    activityCtrl.createActivityMember,
+  );
 
-  router
+router
   .route('/:id/member')
   .get(
     authCtrl.protect,
     activityCtrl.checkActivityMemberOrAdmin,
     activityCtrl.setMyActivitiesQuery,
-    activityCtrl.getAllActivityMember
+    activityCtrl.getAllActivityMember,
   )
   .post(
     authCtrl.protect,
     activityCtrl.checkActivityManagerOrAdmin,
     activityCtrl.setAddMemberBody,
-    activityCtrl.createActivityMember
-  )
+    activityCtrl.createActivityMember,
+  );
 
-  router
+router
   .route('/:activityId/member/:id')
   .patch(
     authCtrl.protect,
@@ -87,6 +87,6 @@ router
     authCtrl.protect,
     activityCtrl.checkActivityManagerOrAdmin,
     activityCtrl.deleteMember,
-  )
+  );
 
 module.exports = router;

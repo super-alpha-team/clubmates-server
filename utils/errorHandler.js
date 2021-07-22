@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 const AppError = require('./appError');
 
 const handleCastErrorDB = (error) => {
@@ -6,7 +7,7 @@ const handleCastErrorDB = (error) => {
 };
 
 const handleDuplicateFieldsDB = (error) => {
-  // errmsg: 'E11000 duplicate key error collection: natour.tours index: name_1 dup key: { : "Ha Nam Bay" }',
+  // errmsg: 'E11000 duplicate key error collection
   // Use Regex to get the value in errmsg
 
   const value = error.errmsg.match(/(["'])(\\?.)*?\1/)[0];
@@ -16,7 +17,8 @@ const handleDuplicateFieldsDB = (error) => {
 };
 
 const handleValidationErrorDB = (error) => {
-  const errors = Object.values(error.errors).map((element) => element.message); // get a string of error messages
+  // get a string of error messages
+  const errors = Object.values(error.errors).map((element) => element.message);
 
   const message = `Invalid input: ${errors.join('. ')}`;
 
@@ -48,7 +50,7 @@ const sendErrorProduction = (error, response) => {
   }
   // 1) log error
   // eslint-disable-next-line no-console
-  console.error('💥💥💥 ERROR 💥💥💥', error);
+  console.error('ERROR', error);
 
   // 2) Send generic message to client
   return response.status(500).json({

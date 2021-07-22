@@ -33,13 +33,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['user', 'admin'],
     default: 'user',
-  },  
+  },
   studentId: {
     type: String,
   },
   phone: {
     type: String,
-  }
+  },
 });
 
 // add plugin and handle message for duplication err E11000

@@ -1,11 +1,11 @@
+const { StatusCodes } = require('http-status-codes');
 const ClubGroup = require('../models/clubGroupModel');
 const catchAsync = require('../utils/catchAsync');
 const handler = require('../utils/handlerFactory');
-const sendResponse = require('../utils/sendResponse');
-const { StatusCodes } = require('http-status-codes');
+// const sendResponse = require('../utils/sendResponse');
 const AppError = require('../utils/appError');
 const ClubGroupMember = require('../models/clubGroupMemberModel');
-const ClubMember = require('../models/clubMemberModel')
+const ClubMember = require('../models/clubMemberModel');
 
 // ROUTE HANDLERS
 
@@ -43,10 +43,9 @@ exports.aliasTop10ClubGroups = (request, response, next) => {
   next();
 };
 
-
 exports.setUserManager = (request, response, next) => {
   request.body.member = {
-    user: request.user.id, 
+    user: request.user.id,
     role: 'manager',
   };
   next();
@@ -54,50 +53,50 @@ exports.setUserManager = (request, response, next) => {
 
 exports.checkUserManager = (request, response, next) => {
   request.body.member = {
-    user: request.user.id, 
+    user: request.user.id,
     role: 'manager',
   };
   next();
 };
 
 exports.setClub = (req, res, next) => {
-  req.body.club = req.params.clubId
-  next()
-}
+  req.body.club = req.params.clubId;
+  next();
+};
 
 exports.createByMe = (request, response, next) => {
-  request.body.createBy = request.user.id
+  request.body.createBy = request.user.id;
   next();
-}
+};
 
 exports.myClubGroups = (request, response, next) => {
   request.query.user = request.user.id;
   return next();
-}
+};
 
 exports.restrictUpdateClubGroupFields = (request, response, next) => {
   const allowedFields = ['title', 'content', 'category'];
 
-  if (request.user.role == 'admin') {
-    allowedFields.push('status')
+  if (request.user.role === 'admin') {
+    allowedFields.push('status');
   }
 
   Object.keys(request.body).forEach((element) => {
     if (!allowedFields.includes(element)) {
-      delete request.body[element]
+      delete request.body[element];
     }
   });
-  next()
+  return next();
 };
 
 exports.checkClubGroupMemberOrAdmin = catchAsync(async (request, response, next) => {
-  if (request.user.role == 'admin') return next();
+  if (request.user.role === 'admin') return next();
 
   const isMember = await ClubGroupMember.findOne({
     clubGroup: request.params.id,
     user: request.user.id,
     role: {
-      '$nin': ['requested']
+      $nin: ['requested'],
     },
   });
   if (!isMember) {
@@ -108,11 +107,11 @@ exports.checkClubGroupMemberOrAdmin = catchAsync(async (request, response, next)
       ),
     );
   }
-  next();
+  return next();
 });
 
 exports.checkClubManagerOrAdmin = catchAsync(async (request, response, next) => {
-  if (request.user.role == 'admin') return next();
+  if (request.user.role === 'admin') return next();
 
   const isManager = await ClubMember.findOne({
     club: request.params.clubId,
@@ -127,21 +126,20 @@ exports.checkClubManagerOrAdmin = catchAsync(async (request, response, next) => 
       ),
     );
   }
-  next();
+  return next();
 });
 
-
 exports.checkClubGroupManagerOrAdmin = catchAsync(async (request, response, next) => {
-  if (request.user.role == 'admin') return next();
-console.log('clubgroup', request.params.id);
-console.log('user', request.user.id);
+  if (request.user.role === 'admin') return next();
+  console.log('clubgroup', request.params.id);
+  console.log('user', request.user.id);
 
   const isManager = await ClubGroupMember.findOne({
     clubGroup: request.params.id,
     user: request.user.id,
     role: 'manager',
   });
-  if (!isManager) { 
+  if (!isManager) {
     return next(
       new AppError(
         'You do not have permission to perform this action',
@@ -149,20 +147,20 @@ console.log('user', request.user.id);
       ),
     );
   }
-  next();
+  return next();
 });
 
 exports.checkClubGroupMemberManagerOrAdmin = catchAsync(async (request, response, next) => {
-  if (request.user.role == 'admin') return next();
-console.log('clubgroup', request.params.clubGroupId);
-console.log('user', request.user.id);
+  if (request.user.role === 'admin') return next();
+  console.log('clubgroup', request.params.clubGroupId);
+  console.log('user', request.user.id);
 
   const isManager = await ClubGroupMember.findOne({
     clubGroup: request.params.clubGroupId,
     user: request.user.id,
     role: 'manager',
   });
-  if (!isManager) { 
+  if (!isManager) {
     return next(
       new AppError(
         'You do not have permission to perform this action',
@@ -170,41 +168,38 @@ console.log('user', request.user.id);
       ),
     );
   }
-  next();
+  return next();
 });
 
 exports.setMyClubGroupQuery = (request, response, next) => {
   // set for query clubgroup
-  request.query["user__eq"] = request.user.id;
-  request.query["role__ne"] = 'requested';
-  //set for query members
-  if (request.params.id) { request.query["clubGroup__eq"] = request.params.id } //?
+  request.query.user__eq = request.user.id;
+  request.query.role__ne = 'requested';
+  // set for query members
+  if (request.params.id) { request.query.clubGroup__eq = request.params.id; } // ?
   next();
-}
+};
 
-exports.getAllClubGroupWithRole = handler.getAll(ClubGroupMember, {populate: 'clubGroup'})
+exports.getAllClubGroupWithRole = handler.getAll(ClubGroupMember, { populate: 'clubGroup' });
 
-exports.getAllClubGroupMember = handler.getAll(ClubGroupMember, {populate: 'user'})
+exports.getAllClubGroupMember = handler.getAll(ClubGroupMember, { populate: 'user' });
 
 exports.setAddmemberBody = (request, response, next) => {
-  request.body["clubGroup"] = request.params.id
+  request.body.clubGroup = request.params.id;
   next();
-}
+};
 
 exports.createClubGroupMember = handler.createOne(ClubGroupMember);
-
 exports.updateClubGroupMember = handler.updateOne(ClubGroupMember);
-
 exports.deleteClubGroupMember = handler.deleteOne(ClubGroupMember);
 
-
 exports.restrictUpdateClubGroupFields = (request, response, next) => {
-  const allowedFields = ['name', 'description', 'photo', 'category']; //creatAt??
+  const allowedFields = ['name', 'description', 'photo', 'category']; // creatAt??
 
   Object.keys(request.body).forEach((element) => {
     if (!allowedFields.includes(element)) {
-      delete request.body[element]
+      delete request.body[element];
     }
   });
-  next()
+  next();
 };

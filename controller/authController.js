@@ -20,17 +20,17 @@ const createAndSendToken = (user, statusCode, response) => {
 };
 
 exports.sign = catchAsync(async (request, response) => {
-  const { userId } = request.body
+  const { userId } = request.body;
   let user = await User.findOne({ userId });
   if (!user) {
     const {
-      name, email, photo
+      name, email, photo,
     } = request.body;
     user = await User.create({
       userId,
       name,
       email,
-      photo
+      photo,
     });
   }
 
@@ -82,5 +82,5 @@ exports.restrictTo = (...roles) => (request, response, next) => {
       ),
     );
   }
-  next();
+  return next();
 };

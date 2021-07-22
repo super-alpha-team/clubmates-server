@@ -8,8 +8,8 @@ const notificationSchema = new mongoose.Schema(
       minlength: [10, 'A Notification must have more than 10 character'],
     },
     read: {
-        type: Boolean,
-        default: false,
+      type: Boolean,
+      default: false,
     },
     createAt: {
       type: Date,

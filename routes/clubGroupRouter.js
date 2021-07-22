@@ -1,9 +1,9 @@
 const express = require('express');
 const clubGroupCtrl = require('../controller/clubGroupController');
 const authCtrl = require('../controller/authController');
-const clubCtrl = require('../controller/clubController')
+// const clubCtrl = require('../controller/clubController');
 
-const router = express.Router({ mergeParams: true }); //get club id
+const router = express.Router({ mergeParams: true }); // get club id
 
 // Advanced Route
 
@@ -15,55 +15,54 @@ router
   .route('/me')
   .get(
     authCtrl.protect,
-    clubGroupCtrl.setMyClubGroupQuery, 
-    clubGroupCtrl.getAllClubGroupWithRole
+    clubGroupCtrl.setMyClubGroupQuery,
+    clubGroupCtrl.getAllClubGroupWithRole,
   );
 
-
-//create clubgroup ok
+// create clubgroup ok
 router
   .route('/')
   .get(clubGroupCtrl.getAllClubGroup)
-  .post( //create
+  .post( // create
     authCtrl.protect,
     clubGroupCtrl.checkClubManagerOrAdmin,
     clubGroupCtrl.setUserManager,
-    clubGroupCtrl.setClub, 
-    clubGroupCtrl.createByMe,   
+    clubGroupCtrl.setClub,
+    clubGroupCtrl.createByMe,
     clubGroupCtrl.createClubGroup,
   );
 
-  // crud clubgroup ok
+// crud clubgroup ok
 router
-.route('/:id')
-.get( clubGroupCtrl.getClubGroup) //read
-.patch(  //update
-  authCtrl.protect,
-  clubGroupCtrl.checkClubGroupManagerOrAdmin,
-  clubGroupCtrl.restrictUpdateClubGroupFields,
-  clubGroupCtrl.updateClubGroup,
-)
-.delete( //delete
-  authCtrl.protect,
-  clubGroupCtrl.checkClubGroupManagerOrAdmin,
-  clubGroupCtrl.deleteClubGroup,
-);
+  .route('/:id')
+  .get(clubGroupCtrl.getClubGroup) // read
+  .patch( // update
+    authCtrl.protect,
+    clubGroupCtrl.checkClubGroupManagerOrAdmin,
+    clubGroupCtrl.restrictUpdateClubGroupFields,
+    clubGroupCtrl.updateClubGroup,
+  )
+  .delete( // delete
+    authCtrl.protect,
+    clubGroupCtrl.checkClubGroupManagerOrAdmin,
+    clubGroupCtrl.deleteClubGroup,
+  );
 
-//create read clubgroup member
+// create read clubgroup member
 router
-.route('/:id/member')
-.get(
-  authCtrl.protect,
-  clubGroupCtrl.checkClubGroupMemberOrAdmin,
-  clubGroupCtrl.setMyClubGroupQuery,
-  clubGroupCtrl.getAllClubGroupMember
-)
-.post(
-  authCtrl.protect,
-  clubGroupCtrl.checkClubGroupManagerOrAdmin,
-  clubGroupCtrl.setAddmemberBody,
-  clubGroupCtrl.createClubGroupMember
-)
+  .route('/:id/member')
+  .get(
+    authCtrl.protect,
+    clubGroupCtrl.checkClubGroupMemberOrAdmin,
+    clubGroupCtrl.setMyClubGroupQuery,
+    clubGroupCtrl.getAllClubGroupMember,
+  )
+  .post(
+    authCtrl.protect,
+    clubGroupCtrl.checkClubGroupManagerOrAdmin,
+    clubGroupCtrl.setAddmemberBody,
+    clubGroupCtrl.createClubGroupMember,
+  );
 
 router
   .route('/:clubGroupId/member/:id')
@@ -77,9 +76,7 @@ router
     authCtrl.protect,
     clubGroupCtrl.checkClubGroupMemberManagerOrAdmin,
     clubGroupCtrl.deleteClubGroupMember,
-  )
-
-
+  );
 
 // router
 //   .route('/:id')

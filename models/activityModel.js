@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 const idValidator = require('mongoose-id-validator');
-const convVie = require('../utils/convVie.js');
-const ActivityMember = require('./activityMemberModel.js');
+const convVie = require('../utils/convVie');
+// const ActivityMember = require('./activityMemberModel');
 
 const activitySchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "An activity must have a name"],
+      required: [true, 'An activity must have a name'],
       trim: true,
     },
     textSearch: {
@@ -16,7 +16,7 @@ const activitySchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      required: [true, "An activity must have content"],
+      required: [true, 'An activity must have content'],
     },
     photo: {
       type: String,
@@ -26,7 +26,7 @@ const activitySchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['Học thuật', 'Văn nghệ','Tình nguyện', 'Phong trào'],
+      enum: ['Học thuật', 'Văn nghệ', 'Tình nguyện', 'Phong trào'],
       default: 'Học thuật',
     },
     memberQuantity: {
@@ -40,7 +40,7 @@ const activitySchema = new mongoose.Schema(
     clubGroup: {
       type: mongoose.Schema.ObjectId,
       ref: 'ClubGroup',
-      required: [true, "The Activity must belong to a ClubGroup"],
+      required: [true, 'The Activity must belong to a ClubGroup'],
     },
     createBy: {
       ref: 'User',
@@ -59,7 +59,7 @@ const activitySchema = new mongoose.Schema(
   },
 );
 
-activitySchema.index({textSearch: 'text'});
+activitySchema.index({ textSearch: 'text' });
 
 activitySchema.virtual('activityGroups', {
   ref: 'ActivityGroup',
@@ -71,52 +71,55 @@ activitySchema.virtual('activityMembers', {
   ref: 'ActivityMember',
   foreignField: 'activity',
   localField: '_id',
-  options: { 
-    filters: {role: {
-      '$in': ['requested']
-    }},
-   }
+  options: {
+    filters: {
+      role: {
+        $in: ['requested'],
+      },
+    },
+  },
 });
 
 activitySchema.plugin(idValidator);
 
-activitySchema.pre('save',async function (next) {
+activitySchema.pre('save', async function (next) {
   this.textSearch = convVie(this.name).toLowerCase();
   next();
 });
 
-activitySchema.post('save', async function() {
+activitySchema.post('save', async function () {
   await this.model('Notification').create({
-    content: `Your Activity is created`,
+    content: 'Your Activity is created',
     link: this._id,
-    user: this.createBy
-  })
+    user: this.createBy,
+  });
   await this.model('ActivityMember').create({
     activity: this._id,
     user: this.createBy,
     role: 'manager',
   });
-  await this.model("ActivityGroup").create({
+  await this.model('ActivityGroup').create({
     name: this.name,
     description: `${this.name} - description`,
     isMain: true,
     activity: this._id,
-    createBy: this.createBy
-  })
+    createBy: this.createBy,
+  });
 });
 
-activitySchema.pre(/^find/, function (next) {
+activitySchema.pre(/^find/, (next) => {
   next();
 });
 
 activitySchema.pre(
-  /findOneAndUpdate|updateOne|update/ ,
-  function(next) {
+  /findOneAndUpdate|updateOne|update/,
+  function (next) {
     const docUpdate = this.getUpdate();
     if (!docUpdate || !docUpdate.name) return next();
     this.findOneAndUpdate({}, { textSearch: convVie(docUpdate.name).toLowerCase() });
     return next();
-});
+  },
+);
 
 activitySchema.post(
   /findOneAndDelete|findOneAndRemove|deleteOne|remove/,

@@ -10,7 +10,8 @@ router
   .route('/')
   .get(
     authCtrl.restrictTo('admin'),
-    notificationCtrl.getAllNotifications)
+    notificationCtrl.getAllNotifications,
+  )
   .post(
     authCtrl.restrictTo('admin'),
     notificationCtrl.createNotification,
@@ -21,14 +22,14 @@ router
   .get(
     notificationCtrl.myNotification,
     notificationCtrl.getAllNotifications,
-  )
+  );
 
 router
   .route('/:id', notificationCtrl.checkNotificationOwnerOrAdmin)
   .get(notificationCtrl.getNotification)
   .patch(
-    notificationCtrl.restrictUpdateNotificationFields, 
-    notificationCtrl.updateNotification
+    notificationCtrl.restrictUpdateNotificationFields,
+    notificationCtrl.updateNotification,
   )
   .delete(notificationCtrl.deleteNotification);
 
