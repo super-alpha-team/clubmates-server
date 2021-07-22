@@ -12,6 +12,7 @@ const hpp = require('hpp');
 // const bodyParser = require('body-parser');
 
 const userRouter = require('./routes/userRouter');
+const authRouter = require('./routes/authRouter');
 const clubRouter = require('./routes/clubRouter');
 const activityRouter = require('./routes/activityRouter');
 // const answerRouter = require('./routes/answerRouter');
@@ -107,6 +108,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // 2 ROUTES
 app.use('/api/v1/user', userRouter);
+app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/club', clubRouter);
 app.use('/api/v1/activity', activityRouter);
 app.use('/api/v1/notification', notificationRouter);
