@@ -40,6 +40,8 @@ const userSchema = new mongoose.Schema({
   phone: {
     type: String,
   },
+}, {
+  timestamps: true,
 });
 
 // add plugin and handle message for duplication err E11000

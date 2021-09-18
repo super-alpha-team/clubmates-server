@@ -2,29 +2,29 @@ const express = require('express');
 
 const router = express.Router();
 
-const userController = require('../controller/userController');
-const authController = require('../controller/authController');
+const userCtrl = require('../controller/userCtrl');
+const authCtrl = require('../controller/authCtrl');
 
-router.post('/sign', authController.sign);
+router.post('/sign', authCtrl.sign);
 
 // all the route below will have to pass the middleware protect before reach to another controllers
-router.use(authController.protect);
+router.use(authCtrl.protect);
 
-router.get('/me', userController.getMe, userController.getUser);
-router.patch('/updateMe', userController.getMe, userController.updateMe);
-router.delete('/deleteMe', userController.getMe, userController.deleteUser);
+router.get('/me', userCtrl.getMe, userCtrl.getUser);
+router.patch('/updateMe', userCtrl.getMe, userCtrl.updateMe);
+router.delete('/deleteMe', userCtrl.getMe, userCtrl.deleteUser);
 
 // ------ Most Secure router -------
 // only trn-admin can use the route below
-router.use(authController.restrictTo('admin'));
+router.use(authCtrl.restrictTo('admin'));
 
-router.route('/').get(userController.getAllUsers);
-router.route('/role').get(userController.getRoleAndCount);
+router.route('/').get(userCtrl.getAllUsers);
+router.route('/role').get(userCtrl.getRoleAndCount);
 
 router
   .route('/:id')
-  .get(userController.getUser)
-  .patch(userController.updateUser)
-  .delete(userController.deleteUser);
+  .get(userCtrl.getUser)
+  .patch(userCtrl.updateUser)
+  .delete(userCtrl.deleteUser);
 
 module.exports = router;

@@ -3,33 +3,24 @@ const { StatusCodes } = require('http-status-codes');
 const catchAsync = require('./catchAsync');
 const AppError = require('./appError');
 
-const queryToMongo = require('./queryToMongo')({});
+const { queryToMongo } = require('./queryToMongo');
 const sendResponse = require('./sendResponse');
 
 exports.createOne = (Model) => catchAsync(async (request, response, next) => {
   const document = await Model.create(request.body);
-
   sendResponse(document, StatusCodes.CREATED, response);
 });
 
-exports.getAll = (Model, Option = {}) => catchAsync(async (request, response, next) => {
+exports.getAll = (Model) => catchAsync(async (request, response, next) => {
   const {
     skip, limit, sort, filter,
-  } = queryToMongo(request.query);
-  let select = {};
-  if (Option.select) {
-    select = Option.select;
-  }
-  console.log(queryToMongo(request.query));
+  } = queryToMongo({})(request.query);
   const [total, result] = await Promise.all([
     Model.countDocuments(filter),
-    Model.find(filter).sort(sort).skip(skip)
-      .limit(limit)
-      .populate(Option.populate)
-      .select(select),
+    Model.find(filter).sort(sort).skip(skip).limit(limit),
   ]);
 
-  sendResponse({ total, returned: result.length, result }, StatusCodes.OK, response);
+  return sendResponse({ total, returned: result.length, result }, StatusCodes.OK, response);
 });
 
 /**
@@ -62,6 +53,7 @@ exports.updateOne = (Model) => catchAsync(async (request, response, next) => {
   const updateOption = {
     new: true, // return the new Update document to client
     runValidators: true, // run the validator
+    context: 'query',
   };
 
   const document = await Model.findByIdAndUpdate(
@@ -81,7 +73,6 @@ exports.deleteOne = (Model) => catchAsync(async (request, response, next) => {
   if (!document) return next(new AppError('No document found', StatusCodes.NOT_FOUND));
 
   // in RESTful API, common practice is not send anything back to client when deleted
-
   return sendResponse(undefined, StatusCodes.NO_CONTENT, response);
 });
 
@@ -108,5 +99,9 @@ exports.getDistinctValueAndCount = (Model, value) => catchAsync(async (request, 
     },
   ]);
 
-  return sendResponse(document, StatusCodes.OK, response);
+  sendResponse(document, StatusCodes.OK, response);
 });
+
+exports.sendArry = (value) => (request, response, next) => {
+  sendResponse(value, StatusCodes.OK, response);
+};

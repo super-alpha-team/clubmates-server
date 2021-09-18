@@ -1,57 +1,82 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 const idValidator = require('mongoose-id-validator');
+const { isEmail } = require('validator');
 const convVie = require('../utils/convVie');
 
 const clubSchema = new mongoose.Schema(
   {
-    name: {
+    ClubTitle: {
       type: String,
       required: [true, 'A Club must have a name'],
       trim: true,
     },
-    textSearch: {
+    ClubSlug: {
+      type: String,
+      unique: true,
+    },
+    ClubTitleTextSearch: {
       type: String,
       select: false,
     },
-    description: {
+    ClubDes: {
       type: String,
       required: [true, 'A Club must have content'],
     },
-    photo: {
+    ClubDesTextSearch: {
       type: String,
-      default() {
-        return `https://via.placeholder.com/150?text=${this.name.charAt(0)}`;
-      },
+      select: false,
     },
-    category: {
+    ClubLogoUrl: {
       type: String,
-      enum: ['Học thuật', 'Tình nguyện', 'Phong trào', 'Văn nghệ'],
-      default: 'Phong trào',
+      required: [true, 'A Club must have logo'],
     },
-    memberQuantity: {
-      type: Number,
-      default: 0,
+    ClubPhotosUrl: {
+      type: [String],
+      validate: [(value) => value.length > 0, 'Please provide image'],
     },
-    groupQuantity: {
-      type: Number,
-      default: 0,
+    ClubCate: {
+      ref: 'Category',
+      type: mongoose.Schema.ObjectId,
+      required: [true, 'Know category this club'],
     },
+    ClubWebsite: {
+      type: String,
+      required: [true, 'A Club must have website link'],
+    },
+    ClubLocation: {
+      type: String,
+      required: [true, 'A Club must have location'],
+    },
+    ClubColor: {
+      type: String,
+      required: [true, 'A Club must have main color'],
+    },
+    ClubNumberPhone: {
+      type: String,
+      required: [true, 'A Club must have number phone to contact'],
+    },
+    ClubEmail: {
+      type: String,
+      required: [true, 'A Club must have Email'],
+      validate: [isEmail, 'Please provide a valid email'],
+      uniqueCaseInsensitive: true, // dont care lower or upper case
+    },
+
     activityQuantity: {
       type: Number,
       default: 0,
     },
+
     createBy: {
       ref: 'User',
       type: mongoose.Schema.ObjectId,
       required: [true, 'Know who create this'],
       select: false,
     },
-    createAt: {
-      type: Date,
-      default: Date.now(), // Mongoose will auto convert to today's date
-    },
   },
   {
+    timestamps: true,
     toJSON: { virtuals: true }, // pass the virtuals properties to JSON
     toObject: { virtuals: true }, // --                        -- Object
   },
@@ -59,75 +84,78 @@ const clubSchema = new mongoose.Schema(
 
 // mongo’s full-text search,
 // we need to create indexes for the fields we need to search.
-clubSchema.index({ textSearch: 'text' });
+clubSchema.index({ ClubTitleTextSearch: 'text', ClubDesTextSearch: 'text' });
+clubSchema.index({ ClubSlug: 1 });
 
+// group this is main group
 // Virtual populate for show up child referencing
-clubSchema.virtual('clubGroups', {
-  ref: 'ClubGroup',
-  foreignField: 'club',
+clubSchema.virtual('Group', {
+  ref: 'Group',
+  foreignField: 'Club',
   localField: '_id',
-});
-
-clubSchema.virtual('clubMembers', {
-  ref: 'ClubMember',
-  foreignField: 'club',
-  localField: '_id',
-  options: {
-    filters: {
-      role: {
-        $in: ['requested'],
-      },
-    },
-  },
 });
 
 clubSchema.plugin(idValidator);
 
+clubSchema.methods.isJoined = function (userId) {
+  this.isJoined = userId === 'joined';
+  // populate clubmember
+  // check user
+};
+
 clubSchema.pre('save', async function (next) {
-  this.textSearch = convVie(this.name).toLowerCase();
+  this.ClubTitleTextSearch = convVie(this.ClubTitle).toLowerCase();
+  this.ClubSlug = slugify(convVie(this.ClubTitle), { lower: true });
+  this.ClubDesTextSearch = convVie(this.ClubDes).toLowerCase();
+  this.memberQuantity = 1;
   next();
 });
 
-clubSchema.post('save', async function () {
-  await this.model('Notification').create({
+clubSchema.post('save', async () => {
+  this.model('Notification').create({
     content: 'Your Club is created',
     link: this._id,
     user: this.createBy,
   });
-  await this.model('ClubMember').create({
-    club: this._id,
-    user: this.createBy,
-    role: 'manager',
-  });
-  await this.model('ClubGroup').create({
-    name: this.name,
-    description: `${this.name} - description`,
+
+  // TODO - add group main auto
+  this.model('Group').create({
+    GroupName: this.name,
+    GroupIntro: `${this.name} - introduction`,
+
     isMain: true,
-    club: this._id,
+    Club: this._id,
+
+    memberQuantityL: 1,
     createBy: this.createBy,
   });
 });
 
-// QUERY MIDDLEWARE - auto pupulate user in answer
+// QUERY MIDDLEWARE - auto pupulate category
 clubSchema.pre(/^find/, (next) => {
-  // this.populate({
-  //   path: 'clubGroups',
-  //   select: '_id name photo'
-  // })
-  // .populate({
-  //   path: 'clubMembers',
-  //   select: '_id user'
-  // })
+  this.populate({
+    path: 'ClubCate',
+    select: '_id CateName',
+  });
   next();
 });
 
-// all middleware are trigger
+// all middleware are trigger auto
 clubSchema.pre(
   /findOneAndUpdate|updateOne|update/,
   function (next) {
     const docUpdate = this.getUpdate();
-    if (!docUpdate || !docUpdate.name) return next();
-    this.findOneAndUpdate({}, { textSearch: convVie(docUpdate.name).toLowerCase() });
+    if (!docUpdate) return next();
+    const updateDocs = {};
+    if (docUpdate.ClubTitle) {
+      updateDocs.ClubTitleTextSearch = convVie(docUpdate.ClubTitle).toLowerCase();
+      updateDocs.ClubSlug = slugify(convVie(docUpdate.ClubTitle), { lower: true });
+    }
+    if (docUpdate.ClubDes) {
+      updateDocs.ClubDes = convVie(docUpdate.ClubDesTextSearch).toLowerCase();
+    }
+    // update
+    this.findOneAndUpdate({}, updateDocs, { runValidators: true, context: 'query' });
     return next();
   },
 );
@@ -135,8 +163,9 @@ clubSchema.pre(
 clubSchema.post(
   /findOneAndDelete|findOneAndRemove|deleteOne|remove/,
   { document: true },
-  async function () {
-    await this.model('ClubGroup').deleteMany({ club: this._id });
+  async () => {
+    // TODO - delete some thing relative club
+    // await this.model('ClubGroup').deleteMany({ club: this._id });
   },
 );
 
